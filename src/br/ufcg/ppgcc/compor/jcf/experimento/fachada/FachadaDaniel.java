@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import br.ufcg.ppgcc.compor.jcf.experimento.util.CalculoImpostoRenda;
+import br.ufcg.ppgcc.compor.jcf.experimento.util.Validacao;
 
 public class FachadaDaniel implements FachadaExperimento {
 
@@ -16,10 +17,15 @@ public class FachadaDaniel implements FachadaExperimento {
 	
 	Map<Titular, List<FontePagadora>> mapaFonte = new HashMap<Titular, List<FontePagadora>>() ;
 	Map<Titular, List<Dependente>> mapaDependente = new HashMap<Titular, List<Dependente>>();
-
+	Validacao ehValido = new Validacao();
+	
+	//etapa2 16:20
 	@Override
 	public void criarNovoTitular(Titular titular) {
-		
+		if (!ehValido.obrigatorio(titular.getNome())||!ehValido.obrigatorio(titular.getCpf())){
+		 throw new ExcecaoImpostoDeRenda("campo incompleto");
+		}
+	
 		titulares.add(titular);
 		
 	}
@@ -34,6 +40,13 @@ public class FachadaDaniel implements FachadaExperimento {
 	@Override
 	public void criarFontePagadora(Titular titular, FontePagadora fonte) {
 	
+		if (!ehValido.obrigatorio(fonte.getNome())||!ehValido.obrigatorio(fonte.getCpfCnpj())){
+			throw new ExcecaoImpostoDeRenda("campo incompleto");
+		}
+		
+		if (fonte.getRendimentoRecebidos()<=0){
+			throw new ExcecaoImpostoDeRenda("campo incompleto");
+		}
 		if (mapaFonte.get(titular)==null){
 		
 			mapaFonte.put(titular,  new ArrayList<FontePagadora>());
@@ -63,6 +76,15 @@ public class FachadaDaniel implements FachadaExperimento {
 
 	@Override
 	public void criarDependente(Titular titular, Dependente dependente) {
+		
+		if (!ehValido.obrigatorio(dependente.getNome())||!ehValido.obrigatorio(dependente.getCpf())){
+			throw new ExcecaoImpostoDeRenda("campo incompleto");
+		}
+		
+		if(dependente.getTipo()<=0){
+			throw new ExcecaoImpostoDeRenda("campo incompleto");
+		}
+		
 		if (mapaDependente.get(titular)==null){
 			
 			mapaDependente.put(titular,  new ArrayList<Dependente>());

@@ -10,10 +10,13 @@ import org.junit.Test;
 
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Dependente;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Endereco;
+import br.ufcg.ppgcc.compor.jcf.experimento.fachada.FachadaDaniel;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.FachadaExperimento;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.FontePagadora;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Resultado;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Titular;
+
+//inicio 13:51
 
 public class Experimento1Test {
 
@@ -22,7 +25,7 @@ public class Experimento1Test {
 	@Before
 	public void iniciar() {
 		//Coloque sua Fachada aqui.
-		fachada = null;
+		fachada = new FachadaDaniel();
 	}
 
 	@Test
@@ -56,7 +59,7 @@ public class Experimento1Test {
 		Titular titularSalvo = salvarTitularComUmaFonte(fonte);
 
 		List<FontePagadora> fontes = fachada.listarFontes(titularSalvo);
-		assertEquals(1, fontes.size());
+
 		assertEquals(fonte, fontes.get(0));
 	}
 

@@ -4,8 +4,14 @@ import java.util.List;
 
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Dependente;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.FontePagadora;
+import br.ufcg.ppgcc.compor.jcf.experimento.fachada.GastoDedutivel;
+import br.ufcg.ppgcc.compor.jcf.experimento.fachada.GastoDedutivel.TipoGasto;
 
 public class CalculoImpostoRenda {
+	
+	public double impostoAPagar(double impostoDevido, double impostoPago) {
+		return impostoDevido - impostoPago;
+	}
 
 	public double totalRecebido(List<FontePagadora> fontes) {
 		double soma = 0.0;
@@ -17,11 +23,54 @@ public class CalculoImpostoRenda {
 		return soma;
 	}	
 	
+	public double totalPago(List<FontePagadora> fontes) {
+		double soma = 0.0;
+		
+		for (FontePagadora fontePagadora : fontes) {
+			soma += fontePagadora.getImpostoPago();
+		}
+		
+		return soma;
+	}	
+
 	public double descontoDependentes(double totalRecebido,
 			List<Dependente> dependentes) {
 		return Math.max(0, totalRecebido - (dependentes.size() * 1974.72));
 	}
 	
+	public double descontoSaude(double totalRecebido, List<GastoDedutivel> gastos) {
+		double somaSaude = 0.0;
+		
+		for (GastoDedutivel gasto : gastos) {
+			if (TipoGasto.Saude.equals(gasto.getTipo())) {
+				somaSaude += gasto.getValor();
+			}
+		}
+		
+		return Math.max(0, totalRecebido - somaSaude);
+	}
+
+	public double descontoEducacao(double totalRecebido, List<GastoDedutivel> gastos) {
+		double somaEducacao = 0.0;
+		
+		for (GastoDedutivel gasto : gastos) {
+			if (TipoGasto.Educacao.equals(gasto.getTipo())) {
+				somaEducacao += gasto.getValor();
+			}
+		}
+		
+		somaEducacao = Math.min(3091.35, somaEducacao);
+		
+		return Math.max(0, totalRecebido - somaEducacao);
+	}
+	
+	public double deducaoSimplificada(double totalRecebido) {
+		double deducao = totalRecebido * 0.2;
+		deducao = Math.min(14542.60, deducao);
+		
+		return totalRecebido - deducao;
+	}
+
 	public double impostoDevido(double baseCalculo) {
 		
 		if (baseCalculo < 1637.11 * 12) { //isento

@@ -11,10 +11,14 @@ import org.junit.Test;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Dependente;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Endereco;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.FachadaDaniel;
+import br.ufcg.ppgcc.compor.jcf.experimento.fachada.ExcecaoImpostoDeRenda;
+
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.FachadaExperimento;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.FontePagadora;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Resultado;
 import br.ufcg.ppgcc.compor.jcf.experimento.fachada.Titular;
+import br.ufcg.ppgcc.compor.jcf.experimento.fachada.GastoDedutivel;
+import br.ufcg.ppgcc.compor.jcf.experimento.fachada.GastoDedutivel.TipoGasto;
 
 //inicio 13:51
 
@@ -221,6 +225,364 @@ public class Experimento1Test {
 		Resultado completo = fachada.declaracaoCompleta(titular);
 		assertEquals(4179.89, completo.getImpostoDevido(), 0.1);
 	}
+	
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void declaracaoSemNome() {
+		Titular titular = new Titular();
+		titular.setCpf("000.000.000-00"); 
+		fachada.criarNovoTitular(titular);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void declaracaoSemCpf() {
+		Titular titular = new Titular();
+		titular.setNome("Jose");
+		fachada.criarNovoTitular(titular);
+	}
+	
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novaFonteSemNome() {
+		FontePagadora fonte = 
+				criarFontePagadora(null, "000.000.000/0000-00", 50000);
+		salvarTitularComUmaFonte(fonte);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novaFonteSemCpfCnpj() {
+		FontePagadora fonte = 
+				criarFontePagadora("UFCG", null, 50000);
+		salvarTitularComUmaFonte(fonte);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novaFonteSemRendimentosRecebidos() {
+		FontePagadora fonte = 
+				criarFontePagadora("UFCG", "000.000.000/0000-00", 0);
+		salvarTitularComUmaFonte(fonte);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novaFonteComRendimentosRecebidosNegativos() {
+		FontePagadora fonte = 
+				criarFontePagadora("UFCG", "00.000.000/0000-00", -1000);
+		salvarTitularComUmaFonte(fonte);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novoDependenteSemCpf() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		Dependente dependente = 
+				criarDependente(null, Calendar.getInstance(), "Filho 1", 21);
+		fachada.criarDependente(titular, dependente);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novoDependenteSemNome() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		Dependente dependente = 
+				criarDependente("000.000.000-00", Calendar.getInstance(), null, 21);
+		fachada.criarDependente(titular, dependente);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novoDependenteSemTipo() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		Dependente dependente = 
+				criarDependente("000.000.000-00", Calendar.getInstance(), "Filho", 0);
+		fachada.criarDependente(titular, dependente);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novoDependenteComTipoInvalido() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		Dependente dependente = 
+				criarDependente("000.000.000-00", Calendar.getInstance(), "Filho", -10);
+		fachada.criarDependente(titular, dependente);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void titularComCpfInvalido1() {
+		Titular titular = new Titular();
+		titular.setNome("Jose");
+		titular.setCpf("00000000000"); 
+		fachada.criarNovoTitular(titular);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void titularComCpfInvalido2() {
+		Titular titular = new Titular();
+		titular.setNome("Jose");
+		titular.setCpf("abc"); 
+		fachada.criarNovoTitular(titular);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void titularComCpfInvalido3() {
+		Titular titular = new Titular();
+		titular.setNome("Jose");
+		titular.setCpf("000.000.000-00a"); 
+		fachada.criarNovoTitular(titular);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novaFonteComCnpjInvalido1() {
+		FontePagadora fonte = 
+				criarFontePagadora("UFCG", "0000000000000000", 50000);
+		salvarTitularComUmaFonte(fonte);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novaFonteComCnpjInvalido2() {
+		FontePagadora fonte = 
+				criarFontePagadora("UFCG", "abcd", 50000);
+		salvarTitularComUmaFonte(fonte);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novaFonteComCnpjInvalido3() {
+		FontePagadora fonte = 
+				criarFontePagadora("UFCG", "00.000.000/0000-00a", 50000);
+		salvarTitularComUmaFonte(fonte);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novoDependenteComCpfInvalido1() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		Dependente dependente = 
+				criarDependente("000000000000", Calendar.getInstance(), "Filho 1", 21);
+		fachada.criarDependente(titular, dependente);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novoDependenteComCpfInvalido2() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		Dependente dependente = 
+				criarDependente("abc", Calendar.getInstance(), "Filho 1", 21);
+		fachada.criarDependente(titular, dependente);
+	}
+
+	@Test(expected=ExcecaoImpostoDeRenda.class)
+	public void novoDependenteComCpfInvalido3() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		Dependente dependente = 
+				criarDependente("000.000.000.00a", Calendar.getInstance(), "Filho 1", 21);
+		fachada.criarDependente(titular, dependente);
+	}
+	
+	@Test
+	public void calculoImpostoIsento_1_TendoPagoImposto() {
+		FontePagadora fonte = criarFontePagadoraPorRendaEImpostoPago(15000, 100);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(0, completo.getImpostoDevido(), 0.1);
+		assertEquals(-100, completo.getImpostoAPagar(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoFaixa2_1_TendoPagoImposto() {
+		FontePagadora fonte = criarFontePagadoraPorRendaEImpostoPago(20000, 100);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(26.60, completo.getImpostoDevido(), 0.1);
+		assertEquals(-73.40, completo.getImpostoAPagar(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoFaixa3_1_TendoPagoImposto1() {
+		FontePagadora fonte = criarFontePagadoraPorRendaEImpostoPago(40000, 100);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(2374.21, completo.getImpostoDevido(), 0.1);
+		assertEquals(2274.21, completo.getImpostoAPagar(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoFaixa3_1_TendoPagoImposto2() {
+		FontePagadora fonte = criarFontePagadoraPorRendaEImpostoPago(40000, 2474.21);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(2374.21, completo.getImpostoDevido(), 0.1);
+		assertEquals(-100, completo.getImpostoAPagar(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoFaixa4_TendoPagoImposto1() {
+		FontePagadora fonte = criarFontePagadoraPorRendaEImpostoPago(50000, 100);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(4671.62, completo.getImpostoDevido(), 0.1);
+		assertEquals(4571.62, completo.getImpostoAPagar(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoFaixa4_TendoPagoImposto2() {
+		FontePagadora fonte = criarFontePagadoraPorRendaEImpostoPago(50000, 4771.62);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(4671.62, completo.getImpostoDevido(), 0.1);
+		assertEquals(-100, completo.getImpostoAPagar(), 0.1);
+	}
+
+	@Test
+	public void novoGastoDedutivelTitular() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+
+		GastoDedutivel gastoDedutivel = 
+				criarGastoDedutivel(GastoDedutivel.TipoGasto.Saude, 1000, "000.000.000-00");
+		fachada.criarGastoDedutivel(titular, titular, gastoDedutivel);
+
+		List<GastoDedutivel> gastosDedutiveis = fachada.listarGastosDedutiveis(titular, titular);
+		assertEquals(1, gastosDedutiveis.size());
+		assertEquals(gastoDedutivel, gastosDedutiveis.get(0));
+	}
+
+	@Test
+	public void novoGastoDedutivelDependente() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+		Dependente dependente = criarDependentePadrao1();
+		fachada.criarDependente(titular, dependente);
+
+		GastoDedutivel gastoDedutivel = 
+				criarGastoDedutivel(GastoDedutivel.TipoGasto.Saude, 1000, "000.000.000-00");
+		fachada.criarGastoDedutivel(titular, dependente, gastoDedutivel);
+
+		List<GastoDedutivel> gastosDedutiveis = fachada.listarGastosDedutiveis(titular, dependente);
+		assertEquals(1, gastosDedutiveis.size());
+		assertEquals(gastoDedutivel, gastosDedutiveis.get(0));
+	}
+
+	@Test
+	public void novosGastosDedutiveisTitularDependente() {
+		Titular titular = criarTitularPadrao();
+		fachada.criarNovoTitular(titular);
+		Dependente dependente = criarDependentePadrao1();
+		fachada.criarDependente(titular, dependente);
+
+		GastoDedutivel gastoDedutivel1 = 
+				criarGastoDedutivel(GastoDedutivel.TipoGasto.Saude, 1000, "000.000.000-00");
+		fachada.criarGastoDedutivel(titular, titular, gastoDedutivel1);
+		GastoDedutivel gastoDedutivel2 = 
+				criarGastoDedutivel(GastoDedutivel.TipoGasto.Saude, 1000, "000.000.000-00");
+		fachada.criarGastoDedutivel(titular, dependente, gastoDedutivel2);
+
+		List<GastoDedutivel> gastosDedutiveis = fachada.listarGastosDedutiveis(titular, titular);
+		assertEquals(1, gastosDedutiveis.size());
+		assertEquals(gastoDedutivel1, gastosDedutiveis.get(0));
+
+		gastosDedutiveis = fachada.listarGastosDedutiveis(titular, dependente);
+		assertEquals(1, gastosDedutiveis.size());
+		assertEquals(gastoDedutivel2, gastosDedutiveis.get(0));
+	}
+
+	/** 
+	 * O limite de deduções por gastos com educação 
+	 * do titular é R$ 3.091,35
+	 */
+	@Test
+	public void calculoImpostoFaixa4DeducaoEducacaoTitular() {
+		FontePagadora fonte = criarFontePagadoraPorRenda(100000);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		GastoDedutivel gastoDedutivel = 
+				criarGastoDedutivel(TipoGasto.Educacao, 10000, "00.000.000/0000-00");
+		fachada.criarGastoDedutivel(titular, titular, gastoDedutivel);
+		
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(17571.49, completo.getImpostoDevido(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoFaixa4DeducaoEducacaoDependente() {
+		FontePagadora fonte = criarFontePagadoraPorRenda(100000);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+		Dependente dependente = criarDependentePadrao1();
+		fachada.criarDependente(titular, dependente);
+
+		GastoDedutivel gastoDedutivel = 
+				criarGastoDedutivel(TipoGasto.Educacao, 10000, "00.000.000/0000-00");
+		fachada.criarGastoDedutivel(titular, dependente, gastoDedutivel);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(17028.45, completo.getImpostoDevido(), 0.1);
+	}
+
+	/** 
+	 * Não há limite de deduções por gastos com saúde
+	 */
+	@Test
+	public void calculoImpostoFaixa4DeducaoSaudeTitular() {
+		FontePagadora fonte = criarFontePagadoraPorRenda(100000);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		GastoDedutivel gastoDedutivel = 
+				criarGastoDedutivel(TipoGasto.Saude, 10000, "00.000.000/0000-00");
+		fachada.criarGastoDedutivel(titular, titular, gastoDedutivel);
+		
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(15671.62, completo.getImpostoDevido(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoFaixa4DeducaoSaudeDependente() {
+		FontePagadora fonte = criarFontePagadoraPorRenda(100000);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+		Dependente dependente = criarDependentePadrao1();
+		fachada.criarDependente(titular, dependente);
+
+		GastoDedutivel gastoDedutivel = 
+				criarGastoDedutivel(TipoGasto.Saude, 10000, "00.000.000/0000-00");
+		fachada.criarGastoDedutivel(titular, dependente, gastoDedutivel);
+
+		Resultado completo = fachada.declaracaoCompleta(titular);
+		assertEquals(15128.57, completo.getImpostoDevido(), 0.1);
+	}
+	
+
+	@Test
+	public void calculoImpostoSimplificadoFaixa4DeducaoSaudeDependente() {
+		FontePagadora fonte = criarFontePagadoraPorRenda(70000);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+		Dependente dependente = criarDependentePadrao1();
+		fachada.criarDependente(titular, dependente);
+
+		GastoDedutivel gastoDedutivel = 
+				criarGastoDedutivel(TipoGasto.Saude, 10000, "00.000.000/0000-00");
+		fachada.criarGastoDedutivel(titular, dependente, gastoDedutivel);
+
+		Resultado simplificado = fachada.relatorioSimplificado(titular);
+		assertEquals(6321.62, simplificado.getImpostoDevido(), 0.1);
+	}
+
+	@Test
+	public void calculoImpostoSimplificadoFaixa4SemDeducao() {
+		FontePagadora fonte = criarFontePagadoraPorRenda(70000);
+		Titular titular = salvarTitularComUmaFonte(fonte);
+
+		Resultado simplificado = fachada.relatorioSimplificado(titular);
+		assertEquals(6321.62, simplificado.getImpostoDevido(), 0.1);
+	}
 
 	private Titular criarTitularMinimo() {
 		Titular titular = new Titular();
@@ -244,8 +606,8 @@ public class Experimento1Test {
 		fachada.criarNovoTitular(titular);
 		fachada.criarFontePagadora(titular, fonte);
 		List<Titular> titulares = fachada.listarTitulares();
-		Titular titularSalva = titulares.get(0);
-		return titularSalva;
+		Titular titularSalvo = titulares.get(0);
+		return titularSalvo;
 	}
 
 	private void verificaCriacaoTitular(Titular titular) {
@@ -269,7 +631,7 @@ public class Experimento1Test {
 	}
 
 	private FontePagadora criarFontePagadora(String nome, String cpfCnpj,
-			int rendimentoRecebidos) {
+			double rendimentoRecebidos) {
 		FontePagadora fonte = new FontePagadora();
 		fonte.setNome(nome);
 		fonte.setCpfCnpj(cpfCnpj);
@@ -278,23 +640,30 @@ public class Experimento1Test {
 	}
 
 	private FontePagadora criarFontePagadoraPorRenda(int renda) {
-		return criarFontePagadora("UFCG", "000.000.000/0000-00", renda);
+		return criarFontePagadora("UFCG", "00.000.000/0000-00", renda);
+	}
+
+	private FontePagadora criarFontePagadoraPorRendaEImpostoPago(double renda,
+			double impostoPago) {
+		FontePagadora fonte = criarFontePagadora("UFCG", "00.000.000/0000-00", renda);
+		fonte.setImpostoPago(impostoPago);
+		return fonte;
 	}
 
 	private FontePagadora criarFontePagadoraPadrao1() {
-		return criarFontePagadora("UFCG", "000.000.000/0000-00", 50000);
+		return criarFontePagadora("UFCG", "00.000.000/0000-00", 50000);
 	}
 
 	private FontePagadora criarFontePagadoraPadrao2() {
-		return criarFontePagadora("UFPB", "000.000.000/0000-00", 20000);
+		return criarFontePagadora("UFPB", "00.000.000/0000-00", 20000);
 	}
 
 	private Dependente criarDependentePadrao1() {
-		return criarDependente("000", Calendar.getInstance(), "Filho 1", 21);
+		return criarDependente("000.000.000-00", Calendar.getInstance(), "Filho 1", 21);
 	}
 
 	private Dependente criarDependentePadrao2() {
-		return criarDependente("111", Calendar.getInstance(), "Filho 2", 21);
+		return criarDependente("111.111.111-11", Calendar.getInstance(), "Filho 2", 21);
 	}
 
 	private Dependente criarDependente(String cpf, Calendar dataNascimento,
@@ -305,6 +674,15 @@ public class Experimento1Test {
 		dependente.setNome(nome);
 		dependente.setTipo(tipo);
 		return dependente;
+	}
+
+	private GastoDedutivel criarGastoDedutivel(GastoDedutivel.TipoGasto tipo, 
+			double valor, String cnpjCpfReceptor) {
+		GastoDedutivel gasto = new GastoDedutivel();
+		gasto.setTipo(tipo);
+		gasto.setValorPago(valor);
+		gasto.setCnpjCpfReceptor(cnpjCpfReceptor);
+		return gasto;
 	}
 
 }

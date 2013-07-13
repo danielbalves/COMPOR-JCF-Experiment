@@ -17,4 +17,11 @@ public interface FachadaExperimento {
 	List<FontePagadora> listarFontes(Titular titular);
 
 	List<Dependente> listarDependentes(Titular titular);
+
+	void criarGastoDedutivel(Titular titular, Pessoa realizador, GastoDedutivel gastoDedutivel);
+
+	List<GastoDedutivel> listarGastosDedutiveis(Titular titular, Pessoa realizador);
+
+	Resultado relatorioSimplificado(Titular titular);
+
 }
